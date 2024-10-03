@@ -1,0 +1,51 @@
+@page "/user-profile"
+
+<PageTitle>User Profile</PageTitle>
+
+<h1>User Profile</h1>
+
+<EditForm Model="@profile" OnValidSubmit="@SaveProfile">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>First Name: </label>
+        <InputText @bind-Value="profile.FirstName" />
+    </div>
+    <div>
+        <label>Last Name: </label>
+        <InputText @bind-Value="profile.LastName" />
+    </div>
+    <div>
+        <label>Phone Number: </label>
+        <InputText @bind-Value="profile.PhoneNumber" />
+    </div>
+    <div>
+        <label>Image: </label>
+        <InputFile OnChange="HandleImageUpload" />
+    </div>
+
+    <button type="submit">Save</button>
+</EditForm>
+
+@code {
+    
+    //using BlazorUserProfileApp.Shared;
+
+    private BlazorUserProfileApp.Shared.Profile profile = new();
+
+    private async Task SaveProfile()
+    {
+        var http = new HttpClient { BaseAddress = new Uri("https://localhost:5001") };
+        await http.PostAsJsonAsync("api/profiles", profile);
+    }
+
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        using var stream = file.OpenReadStream();
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        profile.Image = ms.ToArray();
+    }
+}
