@@ -2,4 +2,4 @@
 
 Simple Demo for User profile page with Blazor.
 
-https://raw.githubusercontent.com/junian/blazor-user-profile/refs/heads/raw/docs/blazor-user-profile.mp4
+https://github.com/user-attachments/assets/6ada5564-a8e9-40cd-a5a0-401c34b575d2
