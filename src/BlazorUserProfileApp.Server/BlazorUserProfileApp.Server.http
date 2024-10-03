@@ -1,6 +1,6 @@
 @BlazorUserProfileApp.Server_HostAddress = http://localhost:5009
 
-GET {{BlazorUserProfileApp.Server_HostAddress}}/weatherforecast/
+GET {{BlazorUserProfileApp.Server_HostAddress}}/api/profiles/
 Accept: application/json
 
 ###
