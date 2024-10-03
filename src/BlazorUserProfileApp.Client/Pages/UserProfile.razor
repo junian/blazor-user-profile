@@ -1,4 +1,6 @@
+@using Blazored.Toast.Configuration
 @page "/user-profile"
+@inject IToastService toastService
 
 <PageTitle>User Profile</PageTitle>
 
@@ -73,37 +75,62 @@
 
     private async Task LoadProfile()
     {
-        var http = new HttpClient { BaseAddress = new Uri("http://localhost:5009") };
-        var profiles = await http.GetFromJsonAsync<List<Profile>>("api/profiles");
+        try
+        {
+            var http = new HttpClient { BaseAddress = new Uri("http://localhost:5009") };
+            var profiles = await http.GetFromJsonAsync<List<Profile>>("api/profiles");
 
-        if (profiles != null && profiles.Any())
-        {
-            // Load the first profile
-            profile = profiles.FirstOrDefault();
+            if (profiles != null && profiles.Any())
+            {
+                // Load the first profile
+                profile = profiles.FirstOrDefault();
+            }
+            else
+            {
+                // Initialize empty profile
+                profile = new Profile();
+            }
         }
-        else
+        catch (Exception ex)
         {
-            // If no profiles are in the database, initialize an empty profile for new creation
-            profile = new Profile();
+            toastService.ShowError($"Failed to load profile: {ex.Message}");
         }
     }
 
     private async Task SaveProfile()
     {
-        var http = new HttpClient { BaseAddress = new Uri("http://localhost:5009") };
-
-        if (profile != null)
+        try
         {
-            if (profile.Id == 0)
+            var http = new HttpClient { BaseAddress = new Uri("http://localhost:5009") };
+
+            if (profile != null)
             {
-                // If it's a new profile, POST to create
-                await http.PostAsJsonAsync("api/profiles", profile);
+                HttpResponseMessage response;
+
+                if (profile.Id == 0)
+                {
+                    // If it's a new profile, POST to create
+                    response = await http.PostAsJsonAsync("api/profiles", profile);
+                }
+                else
+                {
+                    // If profile exists, we use POST to update (PUT endpoint not implemented)
+                    response = await http.PostAsJsonAsync("api/profiles", profile);
+                }
+
+                if (response.IsSuccessStatusCode)
+                {
+                    toastService.ShowSuccess("Profile saved successfully!");
+                }
+                else
+                {
+                    toastService.ShowError("Failed to save the profile.");
+                }
             }
-            else
-            {
-                // If profile exists, we would ideally use a PUT endpoint (not implemented in the API yet)
-                await http.PostAsJsonAsync("api/profiles", profile); // Fallback to POST in this case
-            }
+        }
+        catch (Exception ex)
+        {
+            toastService.ShowError($"An error occurred: {ex.Message}");
         }
     }
 

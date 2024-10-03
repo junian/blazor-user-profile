@@ -1,6 +1,7 @@
 using BlazorUserProfileApp.Server.Data;
 using Microsoft.EntityFrameworkCore;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add SQLite Database Context
