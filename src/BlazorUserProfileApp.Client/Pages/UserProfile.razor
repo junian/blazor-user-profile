@@ -2,42 +2,109 @@
 
 <PageTitle>User Profile</PageTitle>
 
-<h1>User Profile</h1>
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">User Profile</h4>
+        </div>
+        <div class="card-body">
+            @if (profile == null)
+            {
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading profile...</p>
+                </div>
+            }
+            else
+            {
+                <EditForm Model="@profile" OnValidSubmit="@SaveProfile" class="needs-validation" novalidate>
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
 
-<EditForm Model="@profile" OnValidSubmit="@SaveProfile">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="firstName" class="form-label">First Name</label>
+                            <InputText @bind-Value="profile.FirstName" id="firstName" class="form-control" placeholder="Enter your first name" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="lastName" class="form-label">Last Name</label>
+                            <InputText @bind-Value="profile.LastName" id="lastName" class="form-control" placeholder="Enter your last name" />
+                        </div>
+                    </div>
 
-    <div>
-        <label>First Name: </label>
-        <InputText @bind-Value="profile.FirstName" />
-    </div>
-    <div>
-        <label>Last Name: </label>
-        <InputText @bind-Value="profile.LastName" />
-    </div>
-    <div>
-        <label>Phone Number: </label>
-        <InputText @bind-Value="profile.PhoneNumber" />
-    </div>
-    <div>
-        <label>Image: </label>
-        <InputFile OnChange="HandleImageUpload" />
-    </div>
+                    <div class="mb-3">
+                        <label for="phoneNumber" class="form-label">Phone Number</label>
+                        <InputText @bind-Value="profile.PhoneNumber" id="phoneNumber" class="form-control" placeholder="Enter your phone number" />
+                    </div>
 
-    <button type="submit">Save</button>
-</EditForm>
+                    <div class="mb-3">
+                        <label for="profileImage" class="form-label">Profile Image</label>
+                        <InputFile OnChange="HandleImageUpload" id="profileImage" class="form-control" />
+                        @if (profile.Image != null && profile.Image.Length > 0)
+                        {
+                            <div class="mt-3">
+                                <img src="@($"data:image/jpeg;base64,{Convert.ToBase64String(profile.Image)}")" alt="Profile Image" class="img-thumbnail" width="150" />
+                            </div>
+                        }
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-save"></i> Save Profile
+                        </button>
+                    </div>
+                </EditForm>
+            }
+        </div>
+    </div>
+</div>
+
+@namespace BlazorUserProfileApp.Shared
 
 @code {
-    
-    //using BlazorUserProfileApp.Shared;
+    private Profile? profile = null;
 
-    private BlazorUserProfileApp.Shared.Profile profile = new();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProfile();
+    }
+
+    private async Task LoadProfile()
+    {
+        var http = new HttpClient { BaseAddress = new Uri("http://localhost:5009") };
+        var profiles = await http.GetFromJsonAsync<List<Profile>>("api/profiles");
+
+        if (profiles != null && profiles.Any())
+        {
+            // Load the first profile
+            profile = profiles.FirstOrDefault();
+        }
+        else
+        {
+            // If no profiles are in the database, initialize an empty profile for new creation
+            profile = new Profile();
+        }
+    }
 
     private async Task SaveProfile()
     {
-        var http = new HttpClient { BaseAddress = new Uri("https://localhost:5001") };
-        await http.PostAsJsonAsync("api/profiles", profile);
+        var http = new HttpClient { BaseAddress = new Uri("http://localhost:5009") };
+
+        if (profile != null)
+        {
+            if (profile.Id == 0)
+            {
+                // If it's a new profile, POST to create
+                await http.PostAsJsonAsync("api/profiles", profile);
+            }
+            else
+            {
+                // If profile exists, we would ideally use a PUT endpoint (not implemented in the API yet)
+                await http.PostAsJsonAsync("api/profiles", profile); // Fallback to POST in this case
+            }
+        }
     }
 
     private async Task HandleImageUpload(InputFileChangeEventArgs e)
@@ -46,6 +113,9 @@
         using var stream = file.OpenReadStream();
         using var ms = new MemoryStream();
         await stream.CopyToAsync(ms);
-        profile.Image = ms.ToArray();
+        if (profile != null)
+        {
+            profile.Image = ms.ToArray();
+        }
     }
 }
