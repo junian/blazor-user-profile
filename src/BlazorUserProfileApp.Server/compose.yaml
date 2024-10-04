@@ -1,0 +1,20 @@
+name: "blazor-user-profile-service"
+services:
+  blazor-user-profile-api:
+    image: "mcr.microsoft.com/dotnet/aspnet:8.0"
+    container_name: "blazor-user-profile-api"
+    restart: unless-stopped
+    volumes:
+      - ./:/home/app/
+      - $APPDATA/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+    networks:
+      - devnet
+    working_dir: "/home/app/bin/Release/net8.0/publish/"
+    environment:
+      TZ: "Asia/Jakarta"
+    entrypoint: ["dotnet", "BlazorUserProfileApp.Server.dll"]
+
+networks:
+  devnet:
+    name: devnet
+    external: true
