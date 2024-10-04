@@ -68,6 +68,20 @@
 @code {
     private Profile? profile = null;
 
+    public static bool IsDebug
+    {
+        get
+        {
+ #if DEBUG
+            return true;
+ #else
+            return false;
+ #endif
+        }
+     }
+
+     private string WebApiHost = IsDebug ? "http://localhost:5009" : "https://blazor-user-profile-api.junian.net";
+
     protected override async Task OnInitializedAsync()
     {
         await LoadProfile();
@@ -77,7 +91,7 @@
     {
         try
         {
-            var http = new HttpClient { BaseAddress = new Uri("http://localhost:5009") };
+            var http = new HttpClient { BaseAddress = new Uri(WebApiHost) };
             var profiles = await http.GetFromJsonAsync<List<Profile>>("api/profiles");
 
             if (profiles != null && profiles.Any())
@@ -101,7 +115,7 @@
     {
         try
         {
-            var http = new HttpClient { BaseAddress = new Uri("http://localhost:5009") };
+            var http = new HttpClient { BaseAddress = new Uri(WebApiHost) };
 
             if (profile != null)
             {
